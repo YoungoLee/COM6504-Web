@@ -15,7 +15,6 @@ self.addEventListener('install', event => {
                 '/javascripts/index.js',
                 '/javascripts/detail.js',
                 '/javascripts/chat.js',
-                '/javascripts/dbpedia.js',
                 '/javascripts/utils.js',
                 '/javascripts/idb-utility.js',
                 '/images/logo.png',
@@ -91,9 +90,7 @@ self.addEventListener('sync', event => {
                             body: 'Plant synced successfully!',
                         });
                         self.clients.matchAll().then(clients => {
-                            console.log('clients', clients)
                             clients.forEach(client => {
-                                console.log('client', client)
                                 client.postMessage({ type: 'newPlantSynced', newPlant: { ...syncPlant, ...newPlant } });
                             });
                         });
@@ -120,7 +117,6 @@ self.addEventListener('sync', event => {
                             body: 'Comment synced successfully!',
                         });
                         self.clients.matchAll().then(clients => {
-                            console.log('clients', clients)
                             clients.forEach(client => {
                                 console.log('client', client)
                                 client.postMessage({ type: 'newCommentSynced', roomId: syncComment.plant, newComment: { ...syncComment, ...newComment } });

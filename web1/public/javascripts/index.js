@@ -1,9 +1,42 @@
 let isSearch = false;
 async function handleSearch() {
-    const type = document.getElementById('type');
-    if (!isSearch && type.value) {
+    const hasFlowers = document.getElementById('queryHasFlowers');
+    const hasLeaves = document.getElementById('queryHasLeaves');
+    const hasFruits = document.getElementById('queryHasFruits');
+    const hasSeeds = document.getElementById('queryHasSeeds');
+    const sunExposure = document.getElementById('querySunExposure');
+    const distance = document.getElementById('queryDistance');
+    const sawTime = document.getElementById('querySawTime');
+    const query = {}
+    if (!isSearch && (hasFlowers.value || hasLeaves.value || hasFruits.value || hasSeeds.value || sunExposure.value)) {
         isSearch = true;
-        const { list = [] } = await fetchPlants({ hasFlowers: type.value === 'true' ? 1 : -1 });
+
+        if (['true', 'false'].includes(hasFlowers.value)) {
+            Object.assign(query, { hasFlowers: hasFlowers.value === 'true' })
+        }
+        if (['true', 'false'].includes(hasLeaves.value)) {
+            Object.assign(query, { hasLeaves: hasLeaves.value === 'true' })
+        }
+        if (['true', 'false'].includes(hasFruits.value)) {
+            Object.assign(query, { hasFruits: hasFruits.value === 'true' })
+        }
+        if (['true', 'false'].includes(hasSeeds.value)) {
+            Object.assign(query, { hasSeeds: hasSeeds.value === 'true' })
+        }
+        if (['full sun', 'partial shade', 'full shade'].includes(sunExposure.value)) {
+            Object.assign(query, { sunExposure: sunExposure.value })
+        }
+        if (['ascend', 'descend'].includes(sawTime.value)) {
+            Object.assign(query, { sawTime: sawTime.value === 'ascend' ? 1 : -1 })
+        }
+        if (['ascend', 'descend'].includes(distance.value)) {
+            const position = JSON.parse(localStorage.getItem('position') || '{}');
+            Object.assign(query, {
+                distance: distance.value === 'ascend' ? 1 : -1,
+                ...position
+            })
+        }
+        const { list = [] } = await fetchPlants(query);
         await renderPlants(list);
         isSearch = false;
     }
@@ -149,6 +182,8 @@ function renderProfileUserName() {
 }
 
 function getGeolocation() {
+    const userLatitude = document.getElementById('userLatitude');
+    const userLongitude = document.getElementById('userLongitude');
     let error;
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
@@ -156,6 +191,12 @@ function getGeolocation() {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
             }));
+            if (userLatitude) {
+                userLatitude.value = position.coords.latitude;
+            }
+            if (userLongitude) {
+                userLongitude.value = position.coords.longitude;
+            }
         }, error => {
             error = error.code
         }, {
@@ -167,10 +208,18 @@ function getGeolocation() {
         error = 'GEO_NO_SUPPORT'
     }
     const watch = navigator.geolocation.watchPosition(position => {
+        const userLatitude = document.getElementById('userLatitude');
+        const userLongitude = document.getElementById('userLongitude');
         localStorage.setItem('position', JSON.stringify({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
         }));
+        if (userLatitude) {
+            userLatitude.value = position.coords.latitude;
+        }
+        if (userLongitude) {
+            userLongitude.value = position.coords.longitude;
+        }
     })
     setTimeout(() => {
         navigator.geolocation.clearWatch(watch);
@@ -181,7 +230,7 @@ function getGeolocation() {
 async function handleAddPlant(event) {
     event.preventDefault();
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const location = JSON.parse(localStorage.getItem('position') || '{}');
+    const position = JSON.parse(localStorage.getItem('position') || '{}');
     const data = new FormData(event.currentTarget);
     const plant = {
         user: userInfo.id,
@@ -200,9 +249,15 @@ async function handleAddPlant(event) {
             flowerColor: data.get('flowerColor'),
             sunExposure: data.get('sunExposure'),
         },
-        location
+        userLocation: {
+            type: 'Point',
+            coordinates: [position.longitude, position.latitude],
+        },
+        location: {
+            type: 'Point',
+            coordinates: [parseFloat(data.get('longitude')), parseFloat(data.get('latitude'))],
+        }
     }
-
     openPlantIDBSync().then((db) => {
         addNewPlantToSync(db, plant, function () {
             const modal = document.getElementById('addPlantModal');
@@ -217,10 +272,107 @@ async function handleAddPlant(event) {
     });
 }
 
+async function renderDbpedia(search) {
+    const { list = [] } = await fetchDbpedias({ search });
+    const detail = list[0];
+    const dbpedia = document.getElementById('dbpedia');
+    if (detail) {
+        dbpedia.textContent = '';
+        if (detail.photo) {
+            const photo = document.createElement('img');
+            photo.className = 'dbpedia-photo';
+            photo.src = detail.photo;
+            dbpedia.appendChild(photo);
+        }
+        if (detail.description) {
+            const description = document.createElement('p');
+            description.className = 'dbpedia-description';
+            description.textContent = detail.description;
+            description.title = detail.description;
+            dbpedia.appendChild(description);
+        }
+        if ((detail.photo || detail.description)) {
+            const link = document.createElement('a');
+            link.className = 'dbpedia-link';
+            link.textContent = detail.label || detail.uri;
+            link.href = detail.uri;
+            link.target = '_blank';
+            dbpedia.appendChild(link);
+        }
+    } else {
+        dbpedia.textContent = '';
+        dbpedia.textContent = 'No Data Link to Dbpedia';
+    }
+}
+
+function loading(element) {
+    if (element) {
+        const loading = document.createElement('div');
+        loading.classList = 'spinner-border';
+        loading.role = 'spinner-bordestatus';
+        const text = document.createElement('span');
+        text.classList = 'visually-hidden';
+        text.textContent = 'Loading...';
+        loading.appendChild(text);
+        element.appendChild(loading);
+    }
+}
+
+function dbpedia() {
+    const name = document.getElementById('name');
+    name.addEventListener('blur', function (event) {
+        const value = event.target.value;
+        if (value) {
+            loading(document.getElementById('dbpedia'));
+            renderDbpedia(value)
+        }
+    })
+}
+
+function initMap() {
+    const initLatitude = 53.3813;
+    const initLongitude = -1.4901;
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    latitudeInput.value = initLatitude;
+    longitudeInput.value = initLongitude;
+    const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: initLatitude, lng: initLongitude },
+        zoom: 8,
+    });
+    const marker = new google.maps.Marker({
+        position: { lat: initLatitude, lng: initLongitude },
+        map,
+        draggable: true,
+    });
+
+    google.maps.event.addListener(marker, "dragend", function (event) {
+        const latitude = event.latLng.lat();
+        const longitude = event.latLng.lng();
+        latitudeInput.value = latitude;
+        longitudeInput.value = longitude;
+    });
+
+    function updateMarkerPosition() {
+        const latitude = parseFloat(latitudeInput.value);
+        const longitude = parseFloat(longitudeInput.value);
+        const newPosition = { lat: latitude, lng: longitude };
+        marker.setPosition(newPosition);
+        map.setCenter(newPosition);
+    }
+
+    latitudeInput.addEventListener("input", updateMarkerPosition);
+    longitudeInput.addEventListener("input", updateMarkerPosition);
+}
+
+
+
 document.addEventListener('DOMContentLoaded', function () {
     checkHasNickName();
     renderProfileUserName();
     getGeolocation();
+    dbpedia();
+    initMap();
 })
 
 window.onload = function () {
@@ -282,4 +434,8 @@ window.onload = function () {
             renderPlant(event.data.newPlant);
         }
     });
+}
+
+window.onerror = function (message, source, lineno, colno, error) {
+    console.log(message, source, lineno, colno, error)
 }

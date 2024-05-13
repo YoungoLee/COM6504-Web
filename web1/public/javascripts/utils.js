@@ -141,3 +141,7 @@ async function updateComment(data) {
 async function deleteComment(data) {
     return await request('DELETE', `/comment/${data.id}`);
 }
+
+async function fetchDbpedias(params = {}) {
+    return await request('GET', '/dbpedia/all', {}, params);
+}

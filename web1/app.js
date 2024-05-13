@@ -14,6 +14,7 @@ const userControllerRouter = require('./controllers/user');
 const plantControllerRouter = require('./controllers/plant');
 const recommendControllerRouter = require('./controllers/recommend');
 const commentControllerRouter = require('./controllers/comment');
+const dbpediaControllerRouter = require('./controllers/depedia');
 
 
 const swaggerSpec = swaggerJSDoc({
@@ -62,6 +63,7 @@ app.use('/api/user', userControllerRouter);
 app.use('/api/plant', plantControllerRouter);
 app.use('/api/recommend', recommendControllerRouter);
 app.use('/api/comment', commentControllerRouter);
+app.use('/api/dbpedia', dbpediaControllerRouter);
 
 
 

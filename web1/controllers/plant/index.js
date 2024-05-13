@@ -63,6 +63,15 @@ const router = express.Router();
  *             longitude:
  *               type: string
  *               description: The longitude of the plant location
+ *         userLocation:
+ *           type: object
+ *           properties:
+ *             latitude:
+ *               type: number
+ *               description: The latitude of the plant location
+ *             longitude:
+ *               type: string
+ *               description: The longitude of the plant location
  *         characteristics:
  *           type: object
  *           properties:
@@ -113,17 +122,60 @@ const router = express.Router();
 router.get('/all', async function (req, res, next) {
     const params = {};
     const sort = {};
-    const { name, hasFlowers } = req.query;
+    const {
+        name,
+        hasFlowers,
+        hasLeaves,
+        hasFruits,
+        hasSeeds,
+        sunExposure,
+        sawTime,
+        distance,
+        longitude,
+        latitude
+    } = req.query;
     if (name) {
-        const nameRegex = new RegExp(name, 'i');
-        Object.assign(params, { name: nameRegex })
+        const regex = new RegExp(name, 'i');
+        Object.assign(params, { name: regex })
     }
-    if (Number(hasFlowers)) {
-        Object.assign(sort, { "characteristics.hasFlowers": Number(hasFlowers) })
+    if (sunExposure) {
+        const regex = new RegExp(sunExposure, 'i');
+        Object.assign(params, { "characteristics.sunExposure": regex })
+    }
+    if (typeof hasFlowers === 'boolean') {
+        Object.assign(params, { "characteristics.hasFlowers": hasFlowers })
+    }
+    if (typeof hasLeaves === 'boolean') {
+        Object.assign(params, { "characteristics.hasLeaves": hasLeaves })
+    }
+    if (typeof hasFruits === 'boolean') {
+        Object.assign(params, { "characteristics.hasFruits": hasFruits })
+    }
+    if (typeof hasFlowers === 'boolean') {
+        Object.assign(params, { "characteristics.hasSeeds": hasSeeds })
+    }
+    if (['1', '-1'].includes(sawTime)) {
+        Object.assign(sort, { sawTime: Number(sawTime) })
+    }
+    if (['1', '-1'].includes(distance) && longitude && latitude) {
+        const userLocation = [longitude, latitude];
+        Object.assign(params, {
+            location: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: userLocation
+                    }
+                }
+            }
+        })
     }
 
     try {
-        const list = await findPlants(params, sort);
+        let list = await findPlants(params, sort);
+        if (distance === '-1' && longitude && latitude) {
+            list = list.reverse();
+        }
         res.status(200).json({ list: list.map(i => ({ id: i._id, ...i.toJSON(), })) });
     } catch (error) {
         console.log('error', error)

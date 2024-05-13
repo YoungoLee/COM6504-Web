@@ -22,20 +22,6 @@ const plantSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    dbpedia: {
-        commonName: {
-            type: String,
-        },
-        scientificName: {
-            type: String,
-        },
-        description: {
-            type: String,
-        },
-        uri: {
-            type: String,
-        },
-    },
     size: {
         height: {
             type: String,
@@ -66,12 +52,24 @@ const plantSchema = new Schema({
         },
     },
     location: {
-        latitude: {
-            type: Number,
+        type: {
+            type: String,
+            default: 'Point'
         },
-        longitude: {
-            type: Number,
+        coordinates: {
+            type: [Number],
+            required: true
+        }
+    },
+    userLocation: {
+        type: {
+            type: String,
+            default: 'Point'
         },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
     },
     user: {
         type: Schema.Types.ObjectId,
@@ -79,5 +77,7 @@ const plantSchema = new Schema({
         required: true
     }
 });
+
+plantSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Plant', plantSchema);

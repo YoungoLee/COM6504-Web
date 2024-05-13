@@ -2,6 +2,10 @@ async function getPlant() {
     const id = window.location.search.replace('?id=', '')
     return await fetchPlant(id);
 }
+async function getCreator(userId) {
+    const user = await fetchUser(userId);
+    return user ? user.nickname : '--';
+}
 
 async function renderPlant() {
     const detail = await getPlant();
@@ -9,9 +13,10 @@ async function renderPlant() {
     if (detail.id) {
         plant.textContent = '';
         const photo = document.createElement('img');
-        photo.className = 'photo';
+        photo.className = 'photo mx-1 mb-3';
         photo.src = detail.photo;
-        plant.appendChild(photo);
+        photo.width = 50;
+        photo.height = 50;
 
         const header = document.createElement('div');
         header.className = 'mt-3 d-flex align-items-center justify-content-between';
@@ -20,7 +25,11 @@ async function renderPlant() {
         const status = document.createElement('span');
         status.className = `badge ${detail.status === 'in-progress' ? 'text-bg-warning' : 'text-bg-success'}`
         status.textContent = detail.status;
-        header.appendChild(name);
+        const info = document.createElement('div');
+        info.className = 'd-flex flex-row align-items-center'
+        info.appendChild(photo);
+        info.appendChild(name);
+        header.appendChild(info);
         header.appendChild(status);
         plant.appendChild(header);
         const body = document.createElement('div');
@@ -67,15 +76,58 @@ async function renderPlant() {
         content.className = 'd-flex flex-column text-start mt-3';
         const description = document.createElement('span');
         description.textContent = detail.description;
-        const position = document.createElement('span');
-        position.textContent = detail.location ? `latitude: ${detail.location.latitude || '-'}, longitude: ${detail.location.longitude || '-'}` : '';
+        const creator = document.createElement('span');
+        creator.textContent = `creator: ${await getCreator(detail.user)}`;
+        const userPosition = document.createElement('span');
+        userPosition.textContent = detail.userLocation ? `latitude: ${detail.userLocation.coordinates[0] || '-'}, longitude: ${detail.userLocation.coordinates[1] || '-'}` : '';
+        const plantPosition = document.createElement('span');
+        plantPosition.textContent = detail.location ? `plant latitude: ${detail.location.coordinates[0] || '-'}, plant longitude: ${detail.location.coordinates[1] || '-'}` : '';
         const size = document.createElement('span');
         size.textContent = `height: ${detail.size.height || '-'}, spread: ${detail.size.spread || '-'}`;
-        content.appendChild(position);
+        content.appendChild(creator);
+        content.appendChild(userPosition);
+        content.appendChild(plantPosition);
         content.appendChild(size);
         content.appendChild(description);
         footer.appendChild(content);
         plant.appendChild(footer);
+
+        const { list = [] } = await fetchDbpedias({ search: detail.name });
+        const dbpediaDetail = list[0];
+        const dbpedia = document.createElement('div');
+        const title = document.createElement('h5');
+        title.textContent = 'Dbpedia Infomation:';
+        if (dbpediaDetail) {
+            dbpedia.appendChild(title)
+            if (dbpediaDetail.photo) {
+                const photo = document.createElement('img');
+                photo.className = 'dbpedia-photo';
+                photo.src = dbpediaDetail.photo;
+                photo.width = 100;
+                dbpedia.appendChild(photo);
+            }
+            if (dbpediaDetail.description) {
+                const description = document.createElement('p');
+                description.className = 'dbpedia-description';
+                description.textContent = dbpediaDetail.description;
+                description.title = dbpediaDetail.description;
+                dbpedia.appendChild(description);
+            }
+            if ((dbpediaDetail.photo || dbpediaDetail.description)) {
+                const link = document.createElement('a');
+                link.className = 'dbpedia-link';
+                link.textContent = dbpediaDetail.label || dbpediaDetail.uri;
+                link.href = dbpediaDetail.uri;
+                link.target = '_blank';
+                dbpedia.appendChild(link);
+            }
+
+        } else {
+            const none = document.createElement('div');
+            none.textContent = 'No Data Link to Dbpedia';
+            dbpedia.appendChild(none)
+        }
+        plant.appendChild(dbpedia);
     }
 }
 
@@ -98,9 +150,11 @@ async function handleApprove({ id, name }) {
 async function renderRecommends() {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const plant = await getPlant();
-    const { list } = await fetchRecommends();
-    if (list && list.length > 0 && plant.status !== 'completed' && userInfo.id === plant.user) {
+    const { list = [] } = await fetchRecommends();
+    const filterList = list.filter(i => i.plant === plant._id);
+    if (filterList && filterList.length > 0) {
         const recommend = document.getElementById('recommend');
+        const leftBox = document.querySelector('.left-box');
         recommend.textContent = '';
         const title = document.createElement('h5');
         title.className = 'mt-3';
@@ -113,7 +167,7 @@ async function renderRecommends() {
         const recommends = document.createElement('div');
         recommends.className = 'list-group row';
 
-        for (const recommend of list) {
+        for (const recommend of filterList) {
             const item = document.createElement('div');
             item.className = 'list-group-item col-12 d-flex flex-row align-items-center justify-content-between'
             const content = document.createElement('span');
@@ -123,17 +177,25 @@ async function renderRecommends() {
             nickname.textContent = `${recommend.user}: `;
             content.appendChild(nickname);
             content.appendChild(name);
-            const approve = document.createElement('button');
-            approve.className = 'btn btn-primary btn-sm';
-            approve.textContent = 'approve';
-            approve.addEventListener('click', () => handleApprove(recommend))
             item.appendChild(content);
-            item.appendChild(approve);
-
+            if (userInfo.id === plant.user && plant.status !== 'completed') {
+                const approve = document.createElement('button');
+                approve.className = 'btn btn-primary btn-sm';
+                approve.textContent = 'approve';
+                approve.addEventListener('click', () => handleApprove(recommend))
+                item.appendChild(approve);
+            }
+            if (plant.status === 'completed' && recommend.name === plant.name) {
+                const approve = document.createElement('span');
+                approve.className = 'badge text-bg-success';
+                approve.textContent = 'approved!';
+                item.appendChild(approve);
+            }
             recommends.appendChild(item);
         }
         recommend.appendChild(recommends);
-        document.querySelector('left-box').classList.add('col-lg-8');
+        leftBox.classList.remove('col-lg-12');
+        leftBox.classList.add('col-lg-8');
     }
 
 
@@ -161,10 +223,9 @@ async function handleAddRecommend(event) {
 
 async function renderRecommendForm() {
     const plant = await getPlant();
-    if (plant.status === 'completed') {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (plant.status === 'completed' || plant.user === userInfo.id) {
         document.querySelector('.recommendForm').classList.add('hide');
-    } else {
-        document.querySelector('left-box').classList.add('col-lg-8');
     }
 }
 
