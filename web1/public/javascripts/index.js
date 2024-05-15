@@ -46,6 +46,7 @@ async function renderPlant(plant) {
     const plants = document.getElementById('plants');
     if (plant.id) {
         const row = document.createElement('div');
+        row.id = plant.id;
         row.className = 'col-sm-12 col-md-4 col-lg-3 col-xl-3 col-xxl-2 mt-3 plant'
         const card = document.createElement('div');
         card.className = 'card';
@@ -56,7 +57,6 @@ async function renderPlant(plant) {
         img.alt = `plant ${plant.name || ''} photo`;
         img.className = 'plant-photo';
         cardHeader.appendChild(img);
-
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body';
         const cardTitle = document.createElement('h5');
@@ -65,26 +65,27 @@ async function renderPlant(plant) {
         const cardDescription = document.createElement('p');
         cardDescription.className = 'card-text';
         cardDescription.textContent = plant.description || '';
-        const detailLink = document.createElement('a');
-        detailLink.className = 'btn';
-        detailLink.title = 'detail';
-        const detailIcon = document.createElement('i');
-        detailIcon.className = 'bi bi-eye btn-detail';
-        detailLink.href = `/detail?id=${plant.id}`
-        detailLink.appendChild(detailIcon);
-        const chatLink = document.createElement('a');
-        chatLink.className = 'btn';
-        chatLink.title = 'chat';
-        const chatIcon = document.createElement('i');
-        chatIcon.className = 'bi bi-chat  btn-chat';
-        chatLink.href = `/chat?id=${plant.id}`
-        chatLink.appendChild(chatIcon);
-
         cardBody.appendChild(cardTitle);
         cardBody.appendChild(cardDescription);
-        cardBody.appendChild(detailLink);
-        cardBody.appendChild(chatLink);
+        if (!plant.sync) {
+            const detailLink = document.createElement('a');
+            detailLink.className = 'btn';
+            detailLink.title = 'detail';
+            const detailIcon = document.createElement('i');
+            detailIcon.className = 'bi bi-eye btn-detail';
+            detailLink.href = `/detail?id=${plant.id}`
+            detailLink.appendChild(detailIcon);
 
+            const chatLink = document.createElement('a');
+            chatLink.className = 'btn';
+            chatLink.title = 'chat';
+            const chatIcon = document.createElement('i');
+            chatIcon.className = 'bi bi-chat  btn-chat';
+            chatLink.href = `/chat?id=${plant.id}`
+            chatLink.appendChild(chatIcon);
+            cardBody.appendChild(detailLink);
+            cardBody.appendChild(chatLink);
+        }
         card.appendChild(cardHeader);
         card.appendChild(cardBody);
         row.appendChild(card);
@@ -259,7 +260,7 @@ async function handleAddPlant(event) {
         }
     }
     openPlantIDBSync().then((db) => {
-        addNewPlantToSync(db, plant, function () {
+        addNewPlantToSync(db, plant, function (onLine) {
             const modal = document.getElementById('addPlantModal');
             const backdrop = document.querySelector('.modal-backdrop')
             const bootstrapModal = new bootstrap.Modal(modal, {
@@ -268,6 +269,9 @@ async function handleAddPlant(event) {
             modal.classList.remove('show')
             document.body.removeChild(backdrop)
             bootstrapModal.hide();
+            if (!onLine) {
+                renderPlant({ ...plant, sync: true, id: `sync-${Math.random() * 10000}` })
+            }
         });
     });
 }
@@ -375,6 +379,15 @@ document.addEventListener('DOMContentLoaded', function () {
     initMap();
 })
 
+const clearSyncPlants = () => {
+    const plants = document.getElementById('plants');
+    Array.from(plants.children).forEach(child => {
+        if (child.id.includes('sync-')) {
+            plants.removeChild(child);
+        }
+    })
+}
+
 window.onload = function () {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js', { scope: '/' })
@@ -424,13 +437,16 @@ window.onload = function () {
         console.log("Offline mode")
         openPlantIDB().then((db) => {
             getAllPlant(db).then((plants) => {
-                renderPlants(plants)
+                for (const plant of plants) {
+                    renderPlant(plant)
+                }
             });
         });
     }
 
     navigator.serviceWorker.addEventListener('message', event => {
         if (event.data.type === 'newPlantSynced') {
+            clearSyncPlants();
             renderPlant(event.data.newPlant);
         }
     });
