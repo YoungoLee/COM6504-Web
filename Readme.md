@@ -54,7 +54,7 @@ docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:lat
 
 # Fourth: run operation:
 
-1.open webstrom and git clone
+1.open webstrom termianl and git clone
 
 2.git clone https://github.com/YoungoLee/COM6504-Web.git
 
