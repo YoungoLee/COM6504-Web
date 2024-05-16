@@ -66,7 +66,7 @@ docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:lat
 
 
 
-## Group Memebr:
+## Group Member:
 
 Yiang Qian:work:Created the overall framework of the plant catalog, then added plant pages, display plant pages, chat pages and depdia pages
 
