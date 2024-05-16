@@ -6,7 +6,7 @@
 
 Click on the “ **macOS Installer** ” option to download the .pkg installer. Make sure you download it to your desired location.
 
-![nodejs](/Users/yui/Desktop/readme文档/nodejs.png)
+![nodejs](https://github.com/YoungoLee/COM6504-Web/blob/main/nodejs.png)
 
 ### Step 2: Run Node.js Installer
 
