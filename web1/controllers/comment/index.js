@@ -1,5 +1,5 @@
 const express = require('express');
-const { findComments, findComment, createComment, updateComment, deleteComment } = require('../../databases/comment');
+const { findComments, findComment, createComment, updateComment, deleteComment } = require('../../../../../../web-basiclly-finish(1)/databases/comment');
 
 const router = express.Router();
 /**

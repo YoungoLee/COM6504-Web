@@ -1,5 +1,5 @@
 const express = require('express');
-const { findPlants, findPlant, createPlant, updatePlant, deletePlant } = require('../../databases/plant');
+const { findPlants, findPlant, createPlant, updatePlant, deletePlant } = require('../../../../../../web-basiclly-finish(1)/databases/plant');
 
 const router = express.Router();
 
