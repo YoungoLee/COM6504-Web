@@ -1,0 +1,19 @@
+.photo{
+    border: 1px solid #9e9d9d;
+    overflow: hidden;
+    border-radius: 100%;
+    object-fit: cover;
+}
+
+.icon{
+    width: 18px;
+}
+.flowerColor{
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+.hide{
+    display: none;
+}

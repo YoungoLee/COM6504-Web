@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Recognition</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="/stylesheets/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body>
+  <div class="modal fade" id="addNickNameModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="addPlantModalLabel">Hello Who are you?</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            onclick="handleSubmitNickName()"></button>
+        </div>
+        <div class="modal-body">
+          <form class="row">
+            <div class="mb-1 col-12">
+              <label for="nickname" class="form-label">Nickname</label>
+              <input type="text" class="form-control" id="nickname" placeholder="please enter your nickname">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+            onclick="handleSubmitNickName()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="handleSubmitNickName()">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="add btn" data-bs-toggle="modal" data-bs-target="#addPlantModal">
+    <i class="bi bi-plus-circle-fill"></i>
+  </button>
+  <div class="modal modal-xl fade" id="addPlantModal" tabindex="-1" aria-labelledby="addPlantModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="addPlantModalLabel">Add Plant</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form class="row g-3" onsubmit="handleAddPlant(event)">
+            <div class="col-md-6 row">
+              <div class="form-floating mb-1 col-md-6">
+                <input type="text" class="form-control" id="name" placeholder="please enter plant name" name="name">
+                <label for="name" class="form-label">Name</label>
+              </div>
+              <div class="dbpedia col-md-6" id="dbpedia"></div>
+              <div class="form-floating mb-1 col-md-6">
+                <input type="textarea" class="form-control" id="description" required
+                  placeholder="please enter plant description" name="description">
+                <label for="description" class="form-label">Description</label>
+              </div>
+              <div class="mb-3 col-md-6">
+                <input type="file" class="form-control" id="photo" required name="photo">
+              </div>
+              <div class="form-floating mb-1 col-md-6">
+                <select class="form-select" id="hasFlowers" required name="hasFlowers">
+                  <option selected disabled value="">please select have flowers?</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <label for="hasFlowers">Flowers</label>
+              </div>
+              <div class="form-floating mb-1 col-md-6">
+                <select class="form-select" id="hasLeaves" required name="hasLeaves">
+                  <option selected disabled value="">please select have leaves?</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <label for="hasLeaves">Leaves</label>
+              </div>
+              <div class="form-floating mb-1 col-md-6">
+                <select class="form-select" id="hasFruits" required name="hasFruits">
+                  <option selected disabled value="">please select have fruits?</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <label for="hasLeaves">Fruits</label>
+              </div>
+              <div class="form-floating mb-1 col-md-6">
+                <select class="form-select" id="hasSeeds" required name="hasSeeds">
+                  <option selected disabled value="">please select have seeds?</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                <label for="hasSeeds">Seeds</label>
+              </div>
+              <div class="form-floating col-md-6">
+                <select class="form-select" id="sunExposure" required name="sunExposure">
+                  <option selected disabled value="">please select sun exposure?</option>
+                  <option value="full sun">Full Sun</option>
+                  <option value="partial shade">Partial Shade</option>
+                  <option value="full shade">Full Shade</option>
+                </select>
+                <label for="sunExposure">Sun Exposure</label>
+              </div>
+              <div class="col-md-6">
+                <label for="hasSeeds">Color</label>
+                <input type="color" class="form-control form-control-color" id="flowerColor" value="#563d7c"
+                  title="please choose plant color" required name="flowerColor">
+              </div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="userLatitude" class="form-label">Your Latitude</label>
+                <input type="number" class="form-control" id="userLatitude" disabled name="userLatitude">
+              </div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="userLongitude" class="form-label">Your Longitude</label>
+                <input type="number" class="form-control" id="userLongitude" disabled name="userLongitude">
+              </div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="height" class="form-label">Height(cm)</label>
+                <input type="number" class="form-control" id="height" required placeholder="please enter plant height"
+                  name="height">
+              </div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="spread" class="form-label">Spread(cm2)</label>
+                <input type="number" class="form-control" id="spread" required placeholder="please enter plant spread"
+                  name="spread">
+              </div>
+            </div>
+            <div class="col-md-6 row">
+              <div id="map" class="map"></div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="latitude" class="form-label">Plant Latitude</label>
+                <input type="number" class="form-control" id="latitude" required step="any"
+                  placeholder="please pick from map or enter plant latitude" name="latitude" max="180" min="-180">
+              </div>
+              <div class="form-group mb-1 col-md-6">
+                <label for="longitude" class="form-label">Plant Longitude</label>
+                <input type="number" class="form-control" id="longitude" required step="any"
+                  placeholder="please pick from map or enter plant longitude" name="longitude" max="180" min="-180">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="navbar navbar-expand-sm bg-body-tertiary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">
+        <img class="navbar-toggler-icon" src="/images/logo.png" />
+      </a>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/">Home</a>
+          </li>
+        </ul>
+        <div class="query mx-1">
+          <div class="form-group">
+            <select class="form-control" id="queryDistance">
+              <option selected disabled>Sort By Distance?</option>
+              <option value="ascend">Ascend</option>
+              <option value="descend">Descend</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="querySawTime">
+              <option selected disabled>Sort By SawTime?</option>
+              <option value="ascend">Ascend</option>
+              <option value="descend">Descend</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="queryHasFlowers">
+              <option selected disabled>Has Flowers?</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="queryHasLeaves">
+              <option selected disabled>Has Leaves?</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="queryHasFruits">
+              <option selected disabled>Has Fruits?</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="queryHasSeeds">
+              <option selected disabled>Has Seeds?</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select class="form-control" id="querySunExposure">
+              <option selected disabled>Select SunExposure?</option>
+              <option value="full sun">Full Sun</option>
+              <option value="partial shade">Partial Shade</option>
+              <option value="full shade">Full Shade</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="handleSearch()">Search</button>
+        </div>
+      </div>
+      <span class="profile mx-1">UserName</span>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <div class="row g-2" id="plants"></div>
+    <div id="googleMap" style="width:500px;height:380px;"></div>
+  </div>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+  <script src="/javascripts/utils.js"></script>
+  <script src="/javascripts/idb-utility.js"></script>
+  <script src="/javascripts/index.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvyHLg46eG2znKuV8YDy2gC7TvUnJSCBU"></script>
+</body>
+
+</html>
