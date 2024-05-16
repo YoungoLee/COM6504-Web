@@ -54,15 +54,15 @@ docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:lat
 
 # Fourth: run operation:
 
-open webstrom and git clone
+1.open webstrom and git clone
 
-git clone https://github.com/YoungoLee/COM6504-Web.git
+2.git clone https://github.com/YoungoLee/COM6504-Web.git
 
-npm i
+3.npm i
 
-npm start 
+4.npm start 
 
-open browser : localhost:1234 and localhost:5678 
+5.open browser : localhost:1234 and localhost:5678 
 
 
 
