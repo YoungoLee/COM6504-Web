@@ -14,7 +14,7 @@ Now, your installer is ready to run. However, it will not take your much time. S
 
 `*Introduction > Continue License > Select Continue > Agree Installation Type > Install > Authenticate with your Mac to allow the Installation > Install Software Summary > Close*`
 
-![Run_Node_js_Installer_eff96f6ecc](/Users/yui/Desktop/readme文档/Run_Node_js_Installer_eff96f6ecc.png)
+![Run_Node_js_Installer_eff96f6ecc](https://github.com/YoungoLee/COM6504-Web/blob/main/Run_Node_js_Installer_eff96f6ecc.png)
 
 ### Step 3: Verify Node.js Installation
 
